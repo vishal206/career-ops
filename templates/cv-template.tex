@@ -1,123 +1,188 @@
 %-------------------------
 % Career-Ops LaTeX CV Template
-% Based on: Gabriel Sison / sb2nov resume template
-% License: MIT
+% Design: Source Sans Pro, tunable spacing, gray inline section rules
+% Filled by build-cv-latex.mjs (do not remove the double-brace tokens
+% or the \resumeSubheading / \resumeItem / \resumeProjectHeading contract).
 %------------------------
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Random Stuff %%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\documentclass[letterpaper,11pt]{article}
-\usepackage{latexsym}
-\usepackage[empty]{fullpage}
-\usepackage{titlesec}
-\usepackage{marvosym}
-\usepackage[usenames,dvipsnames]{color}
-\usepackage{verbatim}
-\usepackage{enumitem}
-\usepackage[hidelinks]{hyperref}
-\usepackage{fancyhdr}
-\usepackage[english]{babel}
+\documentclass[11pt, letterpaper]{article}
+
+% ============================================================
+%  SPACING VARIABLES -- edit these to tune the layout
+% ============================================================
+\newcommand{\marginTop}{0.5cm}
+\newcommand{\marginBottom}{1.3cm}
+\newcommand{\marginLeft}{1.6cm}
+\newcommand{\marginRight}{1.6cm}
+
+\newcommand{\sectionSpaceBefore}{0.30cm}   % gap above each section heading
+\newcommand{\sectionSpaceAfter}{0.20cm}    % gap between rule and first item
+\newcommand{\entryGap}{0.20cm}             % between two entries
+\newcommand{\headerToBullets}{5pt}         % between an entry header and its bullets
+\newcommand{\titleToCompany}{1pt}          % between title line and company line
+\newcommand{\skillRowGap}{4pt}             % between skill rows
+\newcommand{\bulletItemSep}{2pt}           % itemsep inside bullet lists
+\newcommand{\bulletTopSep}{2pt}            % topsep inside bullet lists
+\newcommand{\lineStretch}{1.08}            % line height (1.0 none, 1.10 comfortable)
+\newcommand{\nameFontSize}{25pt}
+\newcommand{\nameLineHeight}{30pt}
+\newcommand{\contactFontSize}{11pt}
+
+% ============================================================
+%  PACKAGES
+% ============================================================
+\usepackage[
+    ignoreheadfoot,
+    top=\marginTop,
+    bottom=\marginBottom,
+    left=\marginLeft,
+    right=\marginRight,
+    footskip=0.8cm,
+]{geometry}
 \usepackage{tabularx}
-\usepackage{fontawesome}
-\usepackage{multicol}
-\setlength{\multicolsep}{-3.0pt}
-\setlength{\columnsep}{-1pt}
-\input{glyphtounicode}
-\pagestyle{fancy}
-\fancyhf{} % clear all header and footer fields
-\fancyfoot{}
-\renewcommand{\headrulewidth}{0pt}
-\renewcommand{\footrulewidth}{0pt}
-% Adjust margins
-\addtolength{\oddsidemargin}{-0.6in}
-\addtolength{\evensidemargin}{-0.5in}
-\addtolength{\textwidth}{1.19in}
-\addtolength{\topmargin}{-.7in}
-\addtolength{\textheight}{1.4in}
-\urlstyle{same}
-\raggedbottom
+\usepackage{array}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{fontawesome5}
+\usepackage{enumitem}
+\usepackage{amsmath}
+\usepackage{calc}
+\usepackage{iftex}
+\usepackage[hidelinks]{hyperref}
+
+\definecolor{primaryColor}{RGB}{0, 0, 0}
+\definecolor{secondaryColor}{RGB}{85, 85, 85}
+\definecolor{subTextColor}{RGB}{70, 70, 70}
+
+\ifPDFTeX
+    \input{glyphtounicode}
+    \pdfgentounicode=1
+    \usepackage[T1]{fontenc}
+    \usepackage[utf8]{inputenc}
+    \usepackage{lmodern}
+\fi
+\usepackage[sfdefault]{sourcesanspro}
+
 \raggedright
-\setlength{\tabcolsep}{0in}
-% Sections formatting
-\titleformat{\section}{
-  \vspace{-7pt}\scshape\raggedright\large\bfseries
-}{}{0em}{}[\color{black}\titlerule \vspace{0pt}]
-% Ensure that generate pdf is machine readable/ATS parsable
-\pdfgentounicode=1
+\pagestyle{empty}
+\setcounter{secnumdepth}{0}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+\setlength{\tabcolsep}{0pt}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Commands  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\newcommand{\resumeItem}[1]{
-  \item\small{
-    {#1 \vspace{-3pt}}
-  }
+\usepackage{setspace}
+\setstretch{\lineStretch}
+
+\setlist[itemize]{
+    topsep=\bulletTopSep,
+    partopsep=0pt,
+    parsep=0pt,
+    itemsep=\bulletItemSep,
+    leftmargin=11pt
 }
-\newcommand{\resumeSubheading}[4]{
-  \vspace{-3pt}\item
-    \begin{tabular*}{1.0\textwidth}[t]{l@{\extracolsep{\fill}}r}
-      \textbf{#1} & \textbf{\small #2} \\
-      \textit{\small#3} & \textit{\small #4} \\
-    \end{tabular*}\vspace{-7pt}
+\renewcommand\labelitemi{$\vcenter{\hbox{\small$\bullet$}}$}
+\renewcommand\labelitemii{$\vcenter{\hbox{\small$\bullet$}}$}
+\urlstyle{same}
+
+% ============================================================
+%  SECTION HEADING -- lowercase \section retains the validator
+%  contract; restyled to the bold title + inline gray rule look.
+% ============================================================
+\renewcommand{\section}[1]{%
+  \vspace{\sectionSpaceBefore}\noindent
+  \makebox[\linewidth][l]{%
+    \textbf{\large #1}\hspace{0.6em}%
+    \textcolor{gray!50}{\leaders\hrule height 0.30pt\hfill\kern0pt}%
+  }%
+  \par\vspace{\sectionSpaceAfter}%
 }
-\newcommand{\resumeSubheadingContinue}[2]{
-  \vspace{-3pt}
-    \begin{tabular*}{1.0\textwidth}[t]{l@{\extracolsep{\fill}}r}
-      \textit{\small#1} & \textit{\small #2} \\
-    \end{tabular*}\vspace{-7pt}
+
+% ============================================================
+%  RESUME COMMANDS (contract used by build-cv-latex.mjs)
+% ============================================================
+% Outer wrapper around a group of entries.
+\newcommand{\resumeSubHeadingListStart}{%
+  \begin{itemize}[leftmargin=0pt, label={}, topsep=0pt, partopsep=0pt, parsep=0pt, itemsep=\entryGap]%
 }
-\newcommand{\resumeProjectHeading}[2]{
-  \vspace{-3pt}\item
-    \begin{tabular*}{1.0\textwidth}[t]{l@{\extracolsep{\fill}}r}
-      \textbf{#1} & \textbf{\small #2} \\
-    \end{tabular*}\vspace{-7pt}
-}
-\newcommand{\resumeSubItem}[1]{\resumeItem{#1}\vspace{0pt}}
-\renewcommand\labelitemi{$\vcenter{\hbox{\tiny$\bullet$}}$}
-\renewcommand\labelitemii{$\vcenter{\hbox{\tiny$\bullet$}}$}
-\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0.0in, label={}]}
 \newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
-\newcommand{\resumeItemListStart}{\begin{itemize}}
-\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{0pt}}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Heading  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% #1 top-left (company / institution), #2 top-right (dates / location),
+% #3 second-left (role / degree),      #4 second-right (location / dates).
+\newcommand{\resumeSubheading}[4]{%
+  \item
+  \begin{tabular*}{\linewidth}[t]{@{}l@{\extracolsep{\fill}}r@{}}
+    \textbf{\textcolor{subTextColor}{#1}} & {\small\textcolor{secondaryColor}{#2}} \\[\titleToCompany]
+    {\small\textcolor{secondaryColor}{#3}} & {\small\textcolor{secondaryColor}{#4}} \\
+  \end{tabular*}%
+  \vspace{\headerToBullets}%
+}
+
+% #1 pre-built "\textbf{name} \emph{$|$ context}", #2 dates (may be empty).
+\newcommand{\resumeProjectHeading}[2]{%
+  \item
+  \begin{tabular*}{\linewidth}[t]{@{}l@{\extracolsep{\fill}}r@{}}
+    \textcolor{subTextColor}{#1} & {\small\textcolor{secondaryColor}{#2}} \\
+  \end{tabular*}%
+  \vspace{\headerToBullets}%
+}
+
+\newcommand{\resumeItem}[1]{\item\small #1}
+\newcommand{\resumeItemListStart}{%
+  \begin{itemize}[topsep=\bulletTopSep, partopsep=0pt, parsep=0pt, itemsep=\bulletItemSep, leftmargin=11pt]%
+}
+\newcommand{\resumeItemListEnd}{\end{itemize}}
+
+% ============================================================
+%  DOCUMENT
+% ============================================================
 \begin{document}
+    \newsavebox\ANDbox
+    \sbox\ANDbox{\hskip 4pt\textcolor{secondaryColor}{|}\hskip 4pt}
+    \newcommand{\AND}{\unskip\copy\ANDbox\ignorespaces}
+
+    % -- Header --------------------------------------------------------------
     \begin{center}
-        % NAME
-        {\Huge\scshape {{NAME}}}
-        % SUBHEADING
-        \\ {{CONTACT_LINE}}\\
-        \small
-        % EMAIL
-        \href{mailto:{{EMAIL_URL}}}{\raisebox{-0.2\height}\faEnvelope\  \underline{{{EMAIL_DISPLAY}}}} ~
-        % LINKEDIN
-        \href{{{LINKEDIN_URL}}}{\raisebox{-0.2\height}\faLinkedin\ \underline{{{LINKEDIN_DISPLAY}}}}  ~
-        % GITHUB
-        \href{{{GITHUB_URL}}}{\raisebox{-0.2\height}\faGithub\ \underline{{{GITHUB_DISPLAY}}}}
+        {\fontsize{\nameFontSize}{\nameLineHeight}\selectfont\textbf{{{NAME}}}}
+
+        \vspace{4pt}
+        {\footnotesize\textcolor{secondaryColor}{{{CONTACT_LINE}}}}
+
+        \vspace{4pt}
+        {\fontsize{\contactFontSize}{\contactFontSize}\selectfont
+        \mbox{{\footnotesize\faEnvelope}\ \href{{{EMAIL_URL}}}{{{EMAIL_DISPLAY}}}}\hspace{14pt}%
+        \mbox{{\footnotesize\faPhone}\ {{PHONE}}}\hspace{14pt}%
+        \mbox{{\footnotesize\faGlobe}\ \href{{{WEBSITE_URL}}}{{{WEBSITE_DISPLAY}}}}\hspace{14pt}%
+        \mbox{{\footnotesize\faLinkedin}\ \href{{{LINKEDIN_URL}}}{{{LINKEDIN_DISPLAY}}}}\hspace{14pt}%
+        \mbox{{\footnotesize\faGithub}\ \href{{{GITHUB_URL}}}{{{GITHUB_DISPLAY}}}}%
+        }
     \end{center}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Education  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Education}
-  \resumeSubHeadingListStart
-{{EDUCATION}}
-  \resumeSubHeadingListEnd
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Experience  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Work Experience}
-  \resumeSubHeadingListStart
-{{EXPERIENCE}}
-  \resumeSubHeadingListEnd
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%  PROJECTS  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Personal Projects}
-\resumeSubHeadingListStart
-{{PROJECTS}}
-\resumeSubHeadingListEnd
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%  Technical Skills  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Technical Skills}
-\vspace{-7pt}
-\begin{itemize}
-[leftmargin=0.15in, label={}]\small{\item{
+    % -- Skills --------------------------------------------------------------
+    \section{Technical Skills}
+    \begin{itemize}[leftmargin=11pt, label={}, topsep=0pt, partopsep=0pt, parsep=0pt, itemsep=\skillRowGap]
+        \small{\item{
 {{SKILLS}}
-}}
-\end{itemize}
+        }}
+    \end{itemize}
+
+    % -- Experience ----------------------------------------------------------
+    \section{Work Experience}
+    \resumeSubHeadingListStart
+{{EXPERIENCE}}
+    \resumeSubHeadingListEnd
+
+    % -- Projects ------------------------------------------------------------
+    \section{Personal Projects}
+    \resumeSubHeadingListStart
+{{PROJECTS}}
+    \resumeSubHeadingListEnd
+
+    % -- Education -----------------------------------------------------------
+    \section{Education}
+    \resumeSubHeadingListStart
+{{EDUCATION}}
+    \resumeSubHeadingListEnd
+
+    % -- Certifications ------------------------------------------------------
+{{CERTIFICATIONS}}
 
 \end{document}

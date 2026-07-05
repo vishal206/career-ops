@@ -33,6 +33,16 @@ function escapeLatex(text, mode = 'text') {
   return out.join('');
 }
 
+// Escape LaTeX, but convert Markdown **bold** spans to \textbf{}. Odd-indexed
+// split segments are the bold ones. If the ** markers are unbalanced, fall back
+// to escaping the whole string literally (no bold).
+function escapeLatexBold(text) {
+  if (typeof text !== 'string') return '';
+  const segs = text.split('**');
+  if (segs.length % 2 === 0) return escapeLatex(text);
+  return segs.map((s, i) => (i % 2 === 1 ? `\\textbf{${escapeLatex(s)}}` : escapeLatex(s))).join('');
+}
+
 function sanitizeUrl(url) {
   if (typeof url !== 'string') return '';
   url = url.trim();
@@ -70,7 +80,7 @@ function buildExperience(entries) {
   const blocks = [];
   for (const e of entries) {
     if (!e) continue;
-    const bullets = Array.isArray(e.bullets) ? e.bullets.map(b => `            \\resumeItem{${escapeLatex(b)}}`).join('\n') : '';
+    const bullets = Array.isArray(e.bullets) ? e.bullets.map(b => `            \\resumeItem{${escapeLatexBold(b)}}`).join('\n') : '';
     blocks.push(`    \\resumeSubheading\n      {${escapeLatex(e.company)}}{${escapeLatex(e.dates)}}\n      {${escapeLatex(e.role)}}{${escapeLatex(e.location)}}\n      \\resumeItemListStart\n${bullets}\n      \\resumeItemListEnd`);
   }
   return blocks.join('\n\n');
@@ -82,8 +92,12 @@ function buildProjects(entries) {
   for (const e of entries) {
     if (!e) continue;
     const context = e.context ? ` \\emph{$|$ ${escapeLatex(e.context)}}` : '';
-    const bullets = Array.isArray(e.bullets) ? e.bullets.map(b => `            \\resumeItem{${escapeLatex(b)}}`).join('\n') : '';
-    blocks.push(`    \\resumeProjectHeading\n      {\\textbf{${escapeLatex(e.name)}}${context}}{${escapeLatex(e.dates)}}\n      \\resumeItemListStart\n${bullets}\n      \\resumeItemListEnd`);
+    const bullets = Array.isArray(e.bullets) ? e.bullets.map(b => `            \\resumeItem{${escapeLatexBold(b)}}`).join('\n') : '';
+    // Right column: a GitHub repo link (icon + label) if provided, else dates.
+    const rightCol = (e.repo && e.repo.url)
+      ? `\\href{${sanitizeUrl(e.repo.url)}}{\\faGithub\\ ${escapeLatex(e.repo.label || 'Repo')}}`
+      : escapeLatex(e.dates);
+    blocks.push(`    \\resumeProjectHeading\n      {\\textbf{${escapeLatex(e.name)}}${context}}{${rightCol}}\n      \\resumeItemListStart\n${bullets}\n      \\resumeItemListEnd`);
   }
   return blocks.join('\n\n');
 }
@@ -95,6 +109,22 @@ function buildSkills(categories) {
     const items = Array.isArray(c.items) ? c.items.join(', ') : (c.items || '');
     return `        \\textbf{${escapeLatex(c.category)}}{: ${escapeLatex(items)}} \\\\`;
   }).filter(Boolean).join('\n');
+}
+
+// Returns the full \section block (so it disappears entirely when there are no
+// certifications), or '' when none are provided.
+function buildCertifications(entries) {
+  if (!Array.isArray(entries) || entries.length === 0) return '';
+  const lines = entries.map(c => {
+    if (!c) return '';
+    const name = escapeLatex(c.name || '');
+    if (!name) return '';
+    const label = c.url ? `\\href{${sanitizeUrl(c.url)}}{\\textbf{${name}}}` : `\\textbf{${name}}`;
+    const issuer = c.issuer ? `, ${escapeLatex(c.issuer)}` : '';
+    return `        ${label}${issuer}`;
+  }).filter(Boolean).join(' \\\\\n');
+  if (!lines) return '';
+  return `    \\section{Certifications}\n    \\begin{itemize}[leftmargin=11pt, label={}, topsep=0pt, partopsep=0pt, parsep=0pt, itemsep=\\skillRowGap]\n        \\small{\\item{\n${lines}\n        }}\n    \\end{itemize}`;
 }
 
 async function main() {
@@ -150,12 +180,17 @@ async function main() {
   const linkedinDisplay = payload.linkedin?.display || '';
   const githubUrl = sanitizeUrl(payload.github?.url || '');
   const githubDisplay = payload.github?.display || '';
+  const websiteUrl = sanitizeUrl(payload.website?.url || '');
+  const websiteDisplay = payload.website?.display || '';
 
   const substitutions = {
     NAME: escapeLatex(payload.name || ''),
     CONTACT_LINE: escapeLatex(payload.contact_line || ''),
+    PHONE: escapeLatex(payload.phone || ''),
     EMAIL_URL: emailUrl,
     EMAIL_DISPLAY: escapeLatex(emailDisplay),
+    WEBSITE_URL: websiteUrl,
+    WEBSITE_DISPLAY: escapeLatex(websiteDisplay),
     LINKEDIN_URL: linkedinUrl,
     LINKEDIN_DISPLAY: escapeLatex(linkedinDisplay),
     GITHUB_URL: githubUrl,
@@ -164,6 +199,7 @@ async function main() {
     EXPERIENCE: buildExperience(payload.experience),
     PROJECTS: buildProjects(payload.projects),
     SKILLS: buildSkills(payload.skills),
+    CERTIFICATIONS: buildCertifications(payload.certifications),
   };
 
   for (const [key, value] of Object.entries(substitutions)) {
@@ -211,8 +247,10 @@ async function main() {
 async function runSelfTest() {
   const sample = {
     name: 'Test Candidate',
-    contact_line: 'City, State | +1 234 567 8900',
+    contact_line: 'City, State',
+    phone: '+1 234 567 8900',
     email: { url: 'test@example.com', display: 'test@example.com' },
+    website: { url: 'https://example.com', display: 'example.com' },
     linkedin: { url: 'https://linkedin.com/in/test', display: 'linkedin.com/in/test' },
     github: { url: 'https://github.com/test', display: 'github.com/test' },
     education: [{
@@ -267,12 +305,17 @@ async function runSelfTest() {
   const linkedinDisplay = sample.linkedin?.display || '';
   const githubUrl = sanitizeUrl(sample.github?.url || '');
   const githubDisplay = sample.github?.display || '';
+  const websiteUrl = sanitizeUrl(sample.website?.url || '');
+  const websiteDisplay = sample.website?.display || '';
 
   const substitutions = {
     NAME: escapeLatex(sample.name),
     CONTACT_LINE: escapeLatex(sample.contact_line),
+    PHONE: escapeLatex(sample.phone || ''),
     EMAIL_URL: emailUrl,
     EMAIL_DISPLAY: escapeLatex(emailDisplay),
+    WEBSITE_URL: websiteUrl,
+    WEBSITE_DISPLAY: escapeLatex(websiteDisplay),
     LINKEDIN_URL: linkedinUrl,
     LINKEDIN_DISPLAY: escapeLatex(linkedinDisplay),
     GITHUB_URL: githubUrl,
@@ -281,6 +324,7 @@ async function runSelfTest() {
     EXPERIENCE: buildExperience(sample.experience),
     PROJECTS: buildProjects(sample.projects),
     SKILLS: buildSkills(sample.skills),
+    CERTIFICATIONS: buildCertifications(sample.certifications),
   };
 
   for (const [key, value] of Object.entries(substitutions)) {
