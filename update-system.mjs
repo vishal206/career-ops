@@ -144,6 +144,7 @@ const SYSTEM_PATHS = [
   'match-star.mjs',
   'prepare-application.mjs',
   'providers/',
+  'scripts/parsers/',
   'seeds/',
   'tests/',
   'doctor.mjs',
